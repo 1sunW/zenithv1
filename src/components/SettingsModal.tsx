@@ -18,7 +18,7 @@ export const CLOAK_PRESETS: Record<string, CloakPreset> = {
   reset: {
     name: 'None (Zenith Default)',
     title: 'Zenith Portal',
-    icon: '/favicon.ico',
+    icon: 'favicon.ico',
   },
   drive: {
     name: 'Google Drive',
