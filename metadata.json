@@ -1,0 +1,6 @@
+{
+  "name": "Unblocked Games Portal",
+  "description": "A secure, clean unblocked games portal loaded with dozens of game sources and mirrors, proxy fallbacks, offline download support, and stealth cloaked tab injection.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
