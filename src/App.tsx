@@ -181,7 +181,7 @@ export default function App() {
               data = await response.json();
             } catch (e) {
               const response = await fetch(
-                'https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io/games/games.json'
+                'https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG/games/gms.json'
               );
               if (!response.ok) throw new Error('Bloxcraft catalog unreachable');
               data = await response.json();
