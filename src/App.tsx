@@ -43,8 +43,43 @@ export default function App() {
   }, []);
 
   // Providers & proxy variables
-  const [selectedProvider, setSelectedProvider] = useState<ProviderName>('gn-math');
-  const [selectedProxy, setSelectedProxy] = useState<string>(TRUFFLED_PROXIES[0].value);
+  const [selectedProvider, setSelectedProvider] = useState<ProviderName>(() => {
+    try {
+      const saved = localStorage.getItem('unblocked-games-provider');
+      const isValid = PROVIDERS.some(prov => prov.value === saved);
+      return isValid ? (saved as ProviderName) : 'gn-math';
+    } catch (e) {
+      return 'gn-math';
+    }
+  });
+
+  const [selectedProxy, setSelectedProxy] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('unblocked-games-proxy');
+      const isValid = TRUFFLED_PROXIES.some(proxy => proxy.value === saved);
+      return isValid ? saved! : TRUFFLED_PROXIES[0].value;
+    } catch (e) {
+      return TRUFFLED_PROXIES[0].value;
+    }
+  });
+
+  // Automatically save selections whenever they change to prevent resetting on mobile page reloads/network switching
+  useEffect(() => {
+    try {
+      localStorage.setItem('unblocked-games-provider', selectedProvider);
+    } catch (e) {
+      console.warn('Failed to save provider to localStorage:', e);
+    }
+  }, [selectedProvider]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem('unblocked-games-proxy', selectedProxy);
+    } catch (e) {
+      console.warn('Failed to save proxy to localStorage:', e);
+    }
+  }, [selectedProxy]);
+
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortMethod, setSortMethod] = useState<string>('a-z');
