@@ -174,30 +174,28 @@ export default function App() {
       try {
         switch (selectedProvider) {
           case 'blox': {
-            let data;
-            try {
-              const response = await fetch('/games/gms.json');
-              if (!response.ok) throw new Error();
-              data = await response.json();
-            } catch (e) {
-              const response = await fetch(
-                'https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG/games/gms.json'
-              );
-              if (!response.ok) throw new Error('Bloxcraft catalog unreachable');
-              data = await response.json();
-            }
+            const response = await fetch(
+              'https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io/games/games.json'
+            );
+            if (!response.ok) throw new Error('Bloxcraft catalog unreachable');
+            const data = await response.json();
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
+              let cleanedUrl = (g.url || '').replace('/app-viewer/?view=/', '/');
+              if (!cleanedUrl.endsWith('index.html') && !cleanedUrl.match(/\.\w+$/)) {
+                cleanedUrl = cleanedUrl.replace(/\/?$/, '/') + 'index.html';
+              }
+              const fixedPath = cleanedUrl.startsWith('/') ? cleanedUrl.slice(1) : cleanedUrl;
+
               return {
                 provider: 'blox',
                 name: g.name || 'Game Block',
-                cover: g.img || '/1f3ae.png',
-                url: g.url,
-                rawUrl: g.url,
-                isAbsolute: (g.url || '').startsWith('http'),
+                cover: g.img || getFallbackImage(g.name),
+                url: `https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io@main/${fixedPath}`,
+                isAbsolute: true,
                 addedOrder: index,
               };
-            }).filter((g: any) => g && g.name && g.url);
+            });
             setGames(parsed);
             break;
           }
@@ -208,15 +206,17 @@ export default function App() {
             const data = await response.json();
 
             const parsed: Game[] = (data || [])
-              .filter((g: any) => g.id !== -1 && g.name && !g.name.startsWith('[!]'))
-              .map((g: any, index: number) => {
+              .filter((z: any) => z.id !== -1 && !z.name?.startsWith('[!]'))
+              .map((z: any, index: number) => {
+                let coverUrl = (z.cover || '').replace('{COVER_URL}', '');
+                if (coverUrl.startsWith('/')) coverUrl = coverUrl.slice(1);
+
                 return {
                   provider: 'gn-math',
-                  name: g.name,
-                  cover: "https://cdn.jsdelivr.net/gh/freebuisness/covers@main/" + (g.cover || "").replace("{COVER_URL}", ""),
-                  url: "/app-viewer/gn-math/?gn-id=" + g.id,
-                  rawUrl: "https://cdn.jsdelivr.net/gh/freebuisness/html@main/" + g.url.replace("{HTML_URL}/", ""),
-                  isAbsolute: false,
+                  name: z.name || 'GN Zone Match',
+                  cover: `https://cdn.jsdelivr.net/gh/freebuisness/covers@main/${coverUrl}`,
+                  url: z.url,
+                  isAbsolute: (z.url || '').startsWith('http'),
                   addedOrder: index,
                 };
               });
@@ -225,18 +225,27 @@ export default function App() {
           }
 
           case 'elite': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/games.json");
-            if (!response.ok) throw new Error('Elite gamez registry inaccessible');
+            const response = await fetch(
+              'https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/games.json'
+            );
+            if (!response.ok) throw new Error('Elite Gamez registry inaccessible');
             const data = await response.json();
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
+              const name = g.title || g.name || 'Elite Arcade';
+              let gameUrl = g.url || '';
+              if (!gameUrl.startsWith('http')) {
+                gameUrl = `https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/${gameUrl}`;
+              }
+
               return {
                 provider: 'elite',
-                name: g.title || "Unknown",
-                cover: "https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/" + g.image,
-                url: "/app-viewer/elite-gamez?url=" + encodeURIComponent(g.url),
-                rawUrl: g.url.startsWith("http") ? g.url : "https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/" + g.url,
-                isAbsolute: false,
+                name,
+                cover: g.image
+                  ? `https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/${g.image}`
+                  : getFallbackImage(name),
+                url: gameUrl,
+                isAbsolute: true,
                 addedOrder: index,
               };
             });
@@ -245,20 +254,36 @@ export default function App() {
           }
 
           case 'sea-bean': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/sea-bean-unblocked/sde@main/zzz.json");
+            const response = await fetch('https://cdn.jsdelivr.net/gh/sea-bean-unblocked/sde@main/zzz.json');
             if (!response.ok) throw new Error('Sea Bean list unreachable');
             const data = await response.json();
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              const cover = (g.cover || "").replace("{COVER_URL}/", "");
-              const gameUrlStr = g.url || '';
+              const name = g.name || g.id || 'Sea Bean Roll';
+              let htmlUrl = g.html || g.url || '';
+
+              if (htmlUrl.includes('{HTML_URL}')) {
+                htmlUrl = htmlUrl.replace(
+                  '{HTML_URL}',
+                  'https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games/'
+                );
+              } else if (!htmlUrl.startsWith('http')) {
+                htmlUrl = `https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io@main/${htmlUrl}`;
+              }
+
+              let cover = (g.cover || g.img || '').replace('{COVER_URL}/', '');
+              let finalCover = cover.startsWith('http')
+                ? cover
+                : cover
+                ? `https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/Icon/${cover}`
+                : getFallbackImage(name);
+
               return {
                 provider: 'sea-bean',
-                name: g.name || "Unknown",
-                cover: cover.startsWith("http") ? cover : "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/Icon/" + cover,
-                url: "/app-viewer/sea-bean?view=" + encodeURIComponent(g.id),
-                rawUrl: "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/html@main/" + gameUrlStr.replace("{HTML_URL}/", ""),
-                isAbsolute: false,
+                name,
+                cover: finalCover,
+                url: htmlUrl,
+                isAbsolute: true,
                 addedOrder: index,
               };
             });
@@ -267,152 +292,53 @@ export default function App() {
           }
 
           case 'ugs': {
-            const repos = ["tharun9772/ugs-1", "tharun9772/ugs-2", "tharun9772/ugs-3"];
+            // Paralellized fetch of sub-databases from multiple git branch contents
+            const repos = ['tharun9772/ugs-1', 'tharun9772/ugs-2', 'tharun9772/ugs-3'];
             let compiledList: Game[] = [];
             let trackerIndex = 0;
 
             const results = await Promise.allSettled(
-              repos.map((repo) => fetch(`https://cdn.jsdelivr.net/gh/tharun9772/game-assets/api_generated/github/${repo}/file.json`))
+              repos.map((repo) => fetch(`https://api.github.com/repos/${repo}/contents/`))
             );
 
             for (let i = 0; i < repos.length; i++) {
               const res = results[i];
               if (res.status === 'fulfilled' && res.value.ok) {
                 try {
-                  const d = await res.value.json();
-                  if (Array.isArray(d)) {
-                    d.forEach((f: any) => {
-                      if (f.type === "file" && f.name?.startsWith("cl") && f.name?.endsWith(".html")) {
-                        let cleanName = f.name.replace(/^cl/, "").replace(".html", "");
+                  const files = await res.value.json();
+                  if (Array.isArray(files)) {
+                    files.forEach((f: any) => {
+                      if (f.type === 'file' && f.name.startsWith('cl') && f.name.endsWith('.html')) {
+                        let cleanName = f.name.replace(/^cl/, '').replace('.html', '');
                         cleanName = cleanName.charAt(0).toUpperCase() + cleanName.slice(1);
 
                         compiledList.push({
                           provider: 'ugs',
                           name: cleanName,
-                          cover: "https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/5968517.png",
-                          url: "/app-viewer/ugs-files?view=" + encodeURIComponent(f.name),
-                          rawUrl: f.download_url,
-                          isAbsolute: false,
+                          cover: 'https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/5968517.png',
+                          url: `https://cdn.jsdelivr.net/gh/${repos[i]}@main/${f.name}`,
+                          isAbsolute: true,
                           addedOrder: trackerIndex++,
                         });
                       }
                     });
                   }
                 } catch (e) {
-                  console.warn(`UGS parser error for ${repos[i]}:`, e);
+                  console.warn(`UGS parser warning for ${repos[i]}:`, e);
                 }
               }
             }
+
             if (compiledList.length === 0) {
-              throw new Error('UGS catalog returned empty files');
+              throw new Error('UGS catalog returned empty files. GitHub API rate limits might apply.');
             }
+
             setGames(compiledList);
             break;
           }
 
-          case 'seraph': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/DominumNetwork/dominum@main/src/assets/libraries/seraph/games.json");
-            if (!response.ok) throw new Error('Seraph game deck offline');
-            const data = await response.json();
-            const BASE = "https://cdn.jsdelivr.net/gh/a456pur/seraph@main/games/";
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              return {
-                provider: 'seraph',
-                name: g.name || "Unknown",
-                cover: g.img || getFallbackImage(g.name || 'Seraph'),
-                url: "/app-viewer/seraph/?view=" + (g.url ? g.url.replace(BASE, "") : ""),
-                rawUrl: g.url,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            });
-            setGames(parsed);
-            break;
-          }
-
-          case 'ckv': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/carbonicality/ChickenKingsVault@main/games.json");
-            if (!response.ok) throw new Error("Chicken King's Vault offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              return {
-                provider: 'ckv',
-                name: g.name || "Unknown",
-                cover: g.img ? "https://cdn.jsdelivr.gh/carbonicality/ChickenKingsVault@main/gameimages/" + g.img : getFallbackImage(g.name || 'CKV'),
-                url: "/app-viewer/chicken-kings-vault/?view=" + g.html,
-                rawUrl: "https://cdn.jsdelivr.net/gh/carbonicality/ChickenKingsVault@main/" + g.html,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            });
-            setGames(parsed);
-            break;
-          }
-
-          case 'hydra': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/Hydra-Network/hydra-assets@main/gmes.json");
-            if (!response.ok) throw new Error("Hydra Network offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              return {
-                provider: 'hydra',
-                name: g.title || "Unknown",
-                cover: g.thumb ? "https://cdn.jsdelivr.net/gh/Hydra-Network/hydra-assets@main/" + g.thumb : getFallbackImage(g.title || 'Hydra'),
-                url: "/app-viewer/hydra-network/?view=" + g.file_name,
-                rawUrl: "https://cdn.jsdelivr.net/gh/Hydra-Network/hydra-assets@main/" + g.file_name,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            });
-            setGames(parsed);
-            break;
-          }
-
-          case 'ccported': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/ccported-stupid-game-lib.json");
-            if (!response.ok) throw new Error("CCPorted collection offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              if (!g || !g.base || !g.Id) return null;
-              return {
-                provider: 'ccported',
-                name: g.name || ("Game " + g.Id),
-                cover: g.base + "/thumb.jpg",
-                url: "/app-viewer/ccported/?view=" + g.Id,
-                rawUrl: g.base + "/index.html",
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            }).filter(Boolean) as Game[];
-            setGames(parsed);
-            break;
-          }
-
-          case 'googleclass': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/bloxcraft-st/google-class-files@main/assets/games.json");
-            if (!response.ok) throw new Error("Google Class Files offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              return {
-                provider: 'googleclass',
-                name: g.name || "Unknown",
-                cover: g.img || getFallbackImage(g.name || 'GoogleClass'),
-                url: "/app-viewer/google-class/?view=" + encodeURIComponent(g.url),
-                rawUrl: "https://cdn.jsdelivr.net/gh/bloxcraft-st/google-class-files@main/" + g.url,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            });
-            setGames(parsed);
-            break;
-          }
-
           case 'truffled': {
+            // Check proxy connection first
             const isOnline = await verifyTruffledProxy(selectedProxy);
             if (!isOnline) {
               setShowBlockedModal(true);
@@ -425,72 +351,27 @@ export default function App() {
             if (!response.ok) throw new Error('Truffled records missing');
             const data = await response.json();
 
+            const proxyBase = selectedProxy.replace(/\/$/, '');
             const parsed: Game[] = (data.games || []).map((g: any, index: number) => {
-              const thumb = (g.thumbnail || "")
-                .replace(/^\/+/, "")
-                .replace(/^png\/games\//, "");
+              let rawUrl = g.url;
+              let gameUrl = g.url || '';
+              let thumb = g.thumbnail || '';
 
-              const cleanThumb = thumb
-                ? "https://cdn.jsdelivr.net/gh/aukak/truffled@main/public/png/games/" + thumb
-                : "/1f3ae.png";
-
-              const embedUrl = g.url
-                ? "/sail/embed/#https://truffled.lol/" + g.url.replace(/^\/+/, "")
-                : null;
-
-              if (!embedUrl) return null;
+              if (!gameUrl.startsWith('http')) {
+                gameUrl = `${proxyBase}${gameUrl.startsWith('/') ? '' : '/'}${gameUrl}`;
+              }
+              if (!thumb.startsWith('http')) {
+                thumb = `${proxyBase}${thumb.startsWith('/') ? '' : '/'}${thumb}`;
+              }
 
               return {
                 provider: 'truffled',
                 name: g.name || 'Truffled Game',
-                cover: cleanThumb,
-                url: embedUrl,
-                rawUrl: g.url ? "https://cdn.jsdelivr.net/gh/aukak/truffled@main/public/" + g.url.replace(/^\/+/, "") : undefined,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            }).filter(Boolean) as Game[];
-            setGames(parsed);
-            break;
-          }
-
-          case 'nowgg': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/nowgg.fun/games.json");
-            if (!response.ok) throw new Error("NowGG archive unreachable");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              if (!g.name || !g.url) return null;
-              let rawUrlStr = g.url.trim();
-              let cleanUrl = rawUrlStr.startsWith("http") ? rawUrlStr : "https://" + rawUrlStr;
-
-              return {
-                provider: 'nowgg',
-                name: g.name,
-                cover: g.img || "/1f3ae.png",
-                url: "/sail/embed/#" + cleanUrl,
-                rawUrl: cleanUrl,
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            }).filter(Boolean) as Game[];
-            setGames(parsed);
-            break;
-          }
-
-          case 'alexrworlds': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/dskjfoisjfsjio/alexrsworld@latest/singlefilegames.json");
-            if (!response.ok) throw new Error("Alexrworlds offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((g: any, index: number) => {
-              return {
-                provider: 'alexrworlds',
-                name: g.title || "Unknown",
-                cover: g.img || "/1f3ae.png",
-                url: "/app-viewer/alexr-world-s/?view=" + encodeURIComponent(g.title),
-                rawUrl: g.path,
-                isAbsolute: false,
+                cover: thumb || getFallbackImage(g.name || 'Truffled'),
+                url: gameUrl,
+                rawUrl,
+                isAbsolute: (g.url || '').startsWith('http'),
+                frameType: g.frameType || 'iframe',
                 addedOrder: index,
               };
             });
@@ -498,61 +379,26 @@ export default function App() {
             break;
           }
 
-          case 'lupine': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/tharun9772/LupineVault@main/assets/games.json");
-            if (!response.ok) throw new Error("LupineVault offline");
-            const d = await response.json();
-
-            const parsed: Game[] = (d || []).map((g: any, index: number) => {
-              if (!g.name) return null;
-              const encodedName = encodeURIComponent(g.name);
-              return {
-                provider: 'lupine',
-                name: g.name,
-                cover: `https://cdn.jsdelivr.gh/tharun9772/LupineVault@main/assets/images/games/tile/${encodedName}.png`,
-                url: `/app-viewer/LupineVault/?view=${encodedName}`,
-                rawUrl: "https://cdn.jsdelivr.net/gh/tharun9772/LupineVault@main/games/files/" + encodedName + "/index.html",
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            }).filter(Boolean) as Game[];
-            setGames(parsed);
-            break;
-          }
-
-          case '3kh0': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/3kh0/3kh0-assets.json");
-            if (!response.ok) throw new Error("3kh0 offline");
-            const data = await response.json();
-
-            const parsed: Game[] = (data || []).map((name: string, index: number) => {
-              return {
-                provider: '3kh0',
-                name: name,
-                cover: "https://raw.githack.com/tharun9772/3kh0-assets/main/" + name + "/splash.png",
-                url: "/app-viewer/3kh0/?view=" + encodeURIComponent(name),
-                rawUrl: "https://raw.githack.com/tharun9772/3kh0-assets/main/" + encodeURIComponent(name) + "/index.html",
-                isAbsolute: false,
-                addedOrder: index,
-              };
-            });
-            setGames(parsed);
-            break;
-          }
-
-          case '3kh0lite': {
-            const response = await fetch("https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/3kh0/3kh0-lite.json");
-            if (!response.ok) throw new Error("3kh0 Lite offline");
+          case 'seraph': {
+            const response = await fetch(
+              'https://cdn.jsdelivr.net/gh/DominumNetwork/dominum@main/src/assets/libraries/seraph/games.json'
+            );
+            if (!response.ok) throw new Error('Seraph game deck offline');
             const data = await response.json();
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
+              const rawPath = g.url || '';
+              const gamePath = rawPath.endsWith('index.html')
+                ? rawPath
+                : rawPath.replace(/\/?$/, '/index.html');
+              const fixedPath = gamePath.startsWith('/') ? gamePath.slice(1) : gamePath;
+
               return {
-                provider: '3kh0lite',
-                name: g.title || "Unknown",
-                cover: "https://raw.githack.com/3kh0/3kh0-lite/main/" + g.imgSrc,
-                url: "/app-viewer/3kh0/lite/?view=" + encodeURIComponent(g.link),
-                rawUrl: "https://raw.githack.com/3kh0/3kh0-lite/main/" + g.link,
-                isAbsolute: false,
+                provider: 'seraph',
+                name: g.name || 'Seraph Arcade',
+                cover: g.img || getFallbackImage(g.name || 'Seraph'),
+                url: `https://cdn.jsdelivr.net/gh/a456pur/seraph@main/${fixedPath}`,
+                isAbsolute: true,
                 addedOrder: index,
               };
             });
@@ -576,7 +422,6 @@ export default function App() {
                 name: g.label || 'PeteZah Match',
                 cover: g.imageUrl || getFallbackImage(g.label || 'PeteZah'),
                 url: finalUrl,
-                rawUrl: finalUrl,
                 isAbsolute: (finalUrl || '').startsWith('http'),
                 addedOrder: index,
                 categories: g.categories || [],
