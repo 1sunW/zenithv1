@@ -32,14 +32,30 @@ export default function GameModal({ game, onClose, selectedProxy }: GameModalPro
     setErrorStatus('');
     setPopupBlocked(false);
 
-    let fullUrl = game.url;
+    let fullUrl = game.rawUrl || game.url;
 
     // GN-Math relative URL resolver
-    if (game.provider === 'gn-math' && !game.isAbsolute) {
+    if (game.provider === 'gn-math' && !game.isAbsolute && !game.rawUrl) {
       fullUrl = 'https://cdn.jsdelivr.net/gh/freebuisness/html@main/' + game.url.replace('{HTML_URL}', '');
     }
 
-    const needsBlobFix = ['blox', 'elite', 'sea-bean', 'ugs', 'gn-math', 'seraph', 'petezah'];
+    const needsBlobFix = [
+      'blox',
+      'elite',
+      'sea-bean',
+      'ugs',
+      'gn-math',
+      'seraph',
+      'petezah',
+      'ckv',
+      'hydra',
+      'ccported',
+      'googleclass',
+      'alexrworlds',
+      'lupine',
+      '3kh0',
+      '3kh0lite'
+    ];
 
     const loadGameSrc = async () => {
       const isRelativeUrl = fullUrl.startsWith('/') && !fullUrl.startsWith('//');
@@ -49,14 +65,12 @@ export default function GameModal({ game, onClose, selectedProxy }: GameModalPro
           if (!response.ok) throw new Error('Network or CORS error');
           let htmlContent = await response.text();
 
-          // Apply PeteZah base URL redirection for relative assets
-          if (game.provider === 'petezah') {
-            const baseUrl = fullUrl.replace(/\/([^\/]*)$/, '/');
-            if (!/<head[^>]*>/i.test(htmlContent)) {
-              htmlContent = htmlContent.replace(/<html[^>]*>/i, `$&<head><base href="${baseUrl}"></head>`);
-            } else {
-              htmlContent = htmlContent.replace(/<head[^>]*>/i, `$&<base href="${baseUrl}">`);
-            }
+          // Auto-inject base URL tag to support relative asset routing inside the sandboxed Blob
+          const baseUrl = fullUrl.substring(0, fullUrl.lastIndexOf('/') + 1);
+          if (!/<head[^>]*>/i.test(htmlContent)) {
+            htmlContent = htmlContent.replace(/<html[^>]*>/i, `$&<head><base href="${baseUrl}"></head>`);
+          } else {
+            htmlContent = htmlContent.replace(/<head[^>]*>/i, `$&<base href="${baseUrl}">`);
           }
 
           const blob = new Blob([htmlContent], { type: 'text/html' });

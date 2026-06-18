@@ -193,6 +193,7 @@ export default function App() {
                 name: g.name || 'Game Block',
                 cover: g.img || '/1f3ae.png',
                 url: g.url,
+                rawUrl: g.url,
                 isAbsolute: (g.url || '').startsWith('http'),
                 addedOrder: index,
               };
@@ -214,6 +215,7 @@ export default function App() {
                   name: g.name,
                   cover: "https://cdn.jsdelivr.net/gh/freebuisness/covers@main/" + (g.cover || "").replace("{COVER_URL}", ""),
                   url: "/app-viewer/gn-math/?gn-id=" + g.id,
+                  rawUrl: "https://cdn.jsdelivr.net/gh/freebuisness/html@main/" + g.url.replace("{HTML_URL}/", ""),
                   isAbsolute: false,
                   addedOrder: index,
                 };
@@ -233,6 +235,7 @@ export default function App() {
                 name: g.title || "Unknown",
                 cover: "https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/" + g.image,
                 url: "/app-viewer/elite-gamez?url=" + encodeURIComponent(g.url),
+                rawUrl: g.url.startsWith("http") ? g.url : "https://cdn.jsdelivr.net/gh/elite-gamez/elite-gamez.github.io@main/" + g.url,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -248,11 +251,13 @@ export default function App() {
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
               const cover = (g.cover || "").replace("{COVER_URL}/", "");
+              const gameUrlStr = g.url || '';
               return {
                 provider: 'sea-bean',
                 name: g.name || "Unknown",
                 cover: cover.startsWith("http") ? cover : "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/Icon/" + cover,
                 url: "/app-viewer/sea-bean?view=" + encodeURIComponent(g.id),
+                rawUrl: "https://cdn.jsdelivr.net/gh/sea-bean-unblocked/html@main/" + gameUrlStr.replace("{HTML_URL}/", ""),
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -286,6 +291,7 @@ export default function App() {
                           name: cleanName,
                           cover: "https://cdn.jsdelivr.net/gh/tharun9772/game-assets@main/5968517.png",
                           url: "/app-viewer/ugs-files?view=" + encodeURIComponent(f.name),
+                          rawUrl: f.download_url,
                           isAbsolute: false,
                           addedOrder: trackerIndex++,
                         });
@@ -316,6 +322,7 @@ export default function App() {
                 name: g.name || "Unknown",
                 cover: g.img || getFallbackImage(g.name || 'Seraph'),
                 url: "/app-viewer/seraph/?view=" + (g.url ? g.url.replace(BASE, "") : ""),
+                rawUrl: g.url,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -335,6 +342,7 @@ export default function App() {
                 name: g.name || "Unknown",
                 cover: g.img ? "https://cdn.jsdelivr.gh/carbonicality/ChickenKingsVault@main/gameimages/" + g.img : getFallbackImage(g.name || 'CKV'),
                 url: "/app-viewer/chicken-kings-vault/?view=" + g.html,
+                rawUrl: "https://cdn.jsdelivr.net/gh/carbonicality/ChickenKingsVault@main/" + g.html,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -354,6 +362,7 @@ export default function App() {
                 name: g.title || "Unknown",
                 cover: g.thumb ? "https://cdn.jsdelivr.net/gh/Hydra-Network/hydra-assets@main/" + g.thumb : getFallbackImage(g.title || 'Hydra'),
                 url: "/app-viewer/hydra-network/?view=" + g.file_name,
+                rawUrl: "https://cdn.jsdelivr.net/gh/Hydra-Network/hydra-assets@main/" + g.file_name,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -374,6 +383,7 @@ export default function App() {
                 name: g.name || ("Game " + g.Id),
                 cover: g.base + "/thumb.jpg",
                 url: "/app-viewer/ccported/?view=" + g.Id,
+                rawUrl: g.base + "/index.html",
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -393,6 +403,7 @@ export default function App() {
                 name: g.name || "Unknown",
                 cover: g.img || getFallbackImage(g.name || 'GoogleClass'),
                 url: "/app-viewer/google-class/?view=" + encodeURIComponent(g.url),
+                rawUrl: "https://cdn.jsdelivr.net/gh/bloxcraft-st/google-class-files@main/" + g.url,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -434,6 +445,7 @@ export default function App() {
                 name: g.name || 'Truffled Game',
                 cover: cleanThumb,
                 url: embedUrl,
+                rawUrl: g.url ? "https://cdn.jsdelivr.net/gh/aukak/truffled@main/public/" + g.url.replace(/^\/+/, "") : undefined,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -449,14 +461,15 @@ export default function App() {
 
             const parsed: Game[] = (data || []).map((g: any, index: number) => {
               if (!g.name || !g.url) return null;
-              let rawUrl = g.url.trim();
-              let cleanUrl = rawUrl.startsWith("http") ? rawUrl : "https://" + rawUrl;
+              let rawUrlStr = g.url.trim();
+              let cleanUrl = rawUrlStr.startsWith("http") ? rawUrlStr : "https://" + rawUrlStr;
 
               return {
                 provider: 'nowgg',
                 name: g.name,
                 cover: g.img || "/1f3ae.png",
                 url: "/sail/embed/#" + cleanUrl,
+                rawUrl: cleanUrl,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -476,6 +489,7 @@ export default function App() {
                 name: g.title || "Unknown",
                 cover: g.img || "/1f3ae.png",
                 url: "/app-viewer/alexr-world-s/?view=" + encodeURIComponent(g.title),
+                rawUrl: g.path,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -497,6 +511,7 @@ export default function App() {
                 name: g.name,
                 cover: `https://cdn.jsdelivr.gh/tharun9772/LupineVault@main/assets/images/games/tile/${encodedName}.png`,
                 url: `/app-viewer/LupineVault/?view=${encodedName}`,
+                rawUrl: "https://cdn.jsdelivr.net/gh/tharun9772/LupineVault@main/games/files/" + encodedName + "/index.html",
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -516,6 +531,7 @@ export default function App() {
                 name: name,
                 cover: "https://raw.githack.com/tharun9772/3kh0-assets/main/" + name + "/splash.png",
                 url: "/app-viewer/3kh0/?view=" + encodeURIComponent(name),
+                rawUrl: "https://raw.githack.com/tharun9772/3kh0-assets/main/" + encodeURIComponent(name) + "/index.html",
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -535,6 +551,7 @@ export default function App() {
                 name: g.title || "Unknown",
                 cover: "https://raw.githack.com/3kh0/3kh0-lite/main/" + g.imgSrc,
                 url: "/app-viewer/3kh0/lite/?view=" + encodeURIComponent(g.link),
+                rawUrl: "https://raw.githack.com/3kh0/3kh0-lite/main/" + g.link,
                 isAbsolute: false,
                 addedOrder: index,
               };
@@ -559,6 +576,7 @@ export default function App() {
                 name: g.label || 'PeteZah Match',
                 cover: g.imageUrl || getFallbackImage(g.label || 'PeteZah'),
                 url: finalUrl,
+                rawUrl: finalUrl,
                 isAbsolute: (finalUrl || '').startsWith('http'),
                 addedOrder: index,
                 categories: g.categories || [],
