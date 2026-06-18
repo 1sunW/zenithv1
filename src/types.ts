@@ -26,4 +26,21 @@ export interface ThemeColors {
 
 export type ThemeName = 'default' | 'cyber' | 'sunset' | 'neon' | 'darkred' | 'dnv2' | 'matrix';
 
-export type ProviderName = 'gn-math' | 'truffled' | 'petezah' | 'elite' | 'sea-bean' | 'ugs' | 'blox' | 'seraph';
+export type ProviderName =
+  | 'gn-math'
+  | 'truffled'
+  | 'petezah'
+  | 'elite'
+  | 'sea-bean'
+  | 'ugs'
+  | 'blox'
+  | 'seraph'
+  | 'ckv'
+  | 'hydra'
+  | 'ccported'
+  | 'googleclass'
+  | 'nowgg'
+  | 'alexrworlds'
+  | 'lupine'
+  | '3kh0'
+  | '3kh0lite';

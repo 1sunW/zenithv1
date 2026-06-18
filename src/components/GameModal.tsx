@@ -42,7 +42,8 @@ export default function GameModal({ game, onClose, selectedProxy }: GameModalPro
     const needsBlobFix = ['blox', 'elite', 'sea-bean', 'ugs', 'gn-math', 'seraph', 'petezah'];
 
     const loadGameSrc = async () => {
-      if (needsBlobFix.includes(game.provider)) {
+      const isRelativeUrl = fullUrl.startsWith('/') && !fullUrl.startsWith('//');
+      if (needsBlobFix.includes(game.provider) && !isRelativeUrl) {
         try {
           const response = await fetch(fullUrl);
           if (!response.ok) throw new Error('Network or CORS error');
