@@ -268,7 +268,7 @@ export default function App() {
                   'https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games/'
                 );
               } else if (!htmlUrl.startsWith('http')) {
-                htmlUrl = `https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io@main/${htmlUrl}`;
+                htmlUrl = `https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG@main/${htmlUrl}`;
               }
 
               let cover = (g.cover || g.img || '').replace('{COVER_URL}/', '');
