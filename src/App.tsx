@@ -175,7 +175,7 @@ export default function App() {
         switch (selectedProvider) {
           case 'blox': {
             const response = await fetch(
-              'https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG/games/games.json'
+              'https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG@main/games/gms.json'
             );
             if (!response.ok) throw new Error('Bloxcraft catalog unreachable');
             const data = await response.json();
@@ -187,10 +187,19 @@ export default function App() {
               }
               const fixedPath = cleanedUrl.startsWith('/') ? cleanedUrl.slice(1) : cleanedUrl;
 
+              // Resolve relative images correctly
+              let finalCover = g.img || '';
+              if (finalCover && !finalCover.startsWith('http') && !finalCover.startsWith('data:')) {
+                const cleanImgPath = finalCover.startsWith('/') ? finalCover.slice(1) : finalCover;
+                finalCover = `https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG@main/${cleanImgPath}`;
+              } else if (!finalCover) {
+                finalCover = getFallbackImage(g.name);
+              }
+
               return {
                 provider: 'blox',
                 name: g.name || 'Game Block',
-                cover: g.img || getFallbackImage(g.name),
+                cover: finalCover,
                 url: `https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG@main/${fixedPath}`,
                 isAbsolute: true,
                 addedOrder: index,
@@ -268,7 +277,7 @@ export default function App() {
                   'https://cdn.jsdelivr.net/gh/sea-bean-unblocked/Singlemile@main/games/'
                 );
               } else if (!htmlUrl.startsWith('http')) {
-                htmlUrl = `https://cdn.jsdelivr.net/gh/tharun9772/tharun9772.github.io@main/${htmlUrl}`;
+                htmlUrl = `https://cdn.jsdelivr.net/gh/tharun9772/Bloxcraft-UBG@main/${htmlUrl}`;
               }
 
               let cover = (g.cover || g.img || '').replace('{COVER_URL}/', '');
